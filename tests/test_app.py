@@ -9,3 +9,8 @@ def test_login_page():
     tester = app.test_client()
     response = tester.get('/login')
     assert response.status_code == 200
+
+def test_login_page():
+    tester = app.test_client()
+    response = tester.get('/about')
+    assert response.status_code == 200
