@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]  # This triggers the pipeline on any push to the main branch
+    branches: [master]  # This triggers the pipeline on any push to the main branch
   pull_request:
-    branches: [main]  # This triggers the pipeline on pull requests to the main branch
+    branches: [master]  # This triggers the pipeline on pull requests to the main branch
 
 jobs:
   build:
