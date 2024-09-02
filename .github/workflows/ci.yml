@@ -1,38 +1,37 @@
-name: home_Kitchen
-env:
-  MYSQL_DATABASE: home_kitchen_db
-  MYSQL_USER: root
-  MYSQL_PASSWORD: sss27
-  MYSQL_HOST: mysql-master
-  NODE_ENV: test
+name: CI
+
 on:
   push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
 jobs:
-  ci:
+  build:
     runs-on: ubuntu-latest
-    container:
-      image: node:14.5.0-alpine
-    services:
-      mysql-master:
-        image: mysql:5.7
-        ports:
-          - 3306/tcp
-        env:
-          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
-          MYSQL_USER: ${{ env.MYSQL_USER }}
-          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
-          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_PASSWORD }}
-        options: >-
-          --name=mysql-master
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Install packages
-        run: "npm ci"
-      - name: Setup Database
-        run: "npm run migrations"
-      - name: Run Tests
-        run: "npm run test"
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Set up MySQL
+      uses: clewolff/mysql-action@v1
+      with:
+        mysql-version: '5.7'
+        database: 'home_kitchen_db'
+        user: 'root'
+        password: 'your_mysql_password'
+
+    - name: Run tests
+      run: |
+        pytest
