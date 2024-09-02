@@ -30,7 +30,7 @@ jobs:
         mysql-version: '5.7'
         database: 'home_kitchen_db'
         user: 'root'
-        password: 'your_mysql_password'
+        password: 'sss27'
 
     - name: Run tests
       run: |
