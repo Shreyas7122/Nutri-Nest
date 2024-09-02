@@ -1,4 +1,5 @@
 from app import app
+#small change
 def test_home_page():
     tester = app.test_client()
     response = tester.get('/')
