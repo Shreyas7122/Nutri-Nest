@@ -1,15 +1,21 @@
-# app.py
-from flask import Flask, request, redirect, url_for, render_template
+from flask import Flask, request, redirect, url_for, render_template, flash
 from flask_mysqldb import MySQL
+from dotenv import load_dotenv
+import os
 import MySQLdb.cursors
+from werkzeug.security import generate_password_hash, check_password_hash
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY')
 
-# MySQL configurations
-app.config['MYSQL_HOST'] = 'knivespc'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'sss27'
-app.config['MYSQL_DB'] = 'home_kitchen_db'
+# MySQL configurations from environment variables
+app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
+app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
 
 mysql = MySQL(app)
 
@@ -22,7 +28,7 @@ def contact():
     return render_template('contact.html')
 
 @app.route('/login')
-def lgoinh():
+def login_page():
     return render_template('login.html')
 
 @app.route('/about')
@@ -34,32 +40,17 @@ def login():
     email = request.form['email']
     password = request.form['password']
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM users WHERE email = %s AND password = %s', (email, password))
+    cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
     account = cursor.fetchone()
-    if account:
+    cursor.close()
+    if account and check_password_hash(account['password'], password):
         return redirect(url_for('menu'))
     else:
-        return 'Invalid credentials', 401
+        flash('Invalid credentials', 'error')
+        return redirect(url_for('login_page'))
 
 @app.route('/menu')
 def menu():
-    return render_template('menu.html')
-
-@app.route('/signup', methods=['POST'])
-def signup():
-    email = request.form['email']
-    password = request.form['password']
-    confirm_password = request.form['confirm_password']
-    if password != confirm_password:
-        return 'Passwords do not match', 400
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
-    account = cursor.fetchone()
-    if account:
-        return 'Account already exists', 400
-    cursor.execute('INSERT INTO users (email, password) VALUES (%s, %s)', (email, password))
-    mysql.connection.commit()
-    cursor.close()
     return render_template('menu.html')
 
 @app.route('/register', methods=['POST'])
@@ -67,19 +58,21 @@ def register():
     email = request.form['email']
     password = request.form['password']
     confirm_password = request.form['confirm_password']
-    
     if password != confirm_password:
-        return 'Passwords do not match', 400
+        flash('Passwords do not match', 'error')
+        return redirect(url_for('login_page'))
+    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
     account = cursor.fetchone()
     if account:
-        return 'Account already exists', 400
-    cursor.execute('INSERT INTO users (email, password) VALUES (%s, %s)', (email, password))
-    mysql.connection.commit()
+        flash('Account already exists', 'error')
+    else:
+        cursor.execute('INSERT INTO users (email, password) VALUES (%s, %s)', (email, hashed_password))
+        mysql.connection.commit()
+        flash('Account created successfully', 'success')
     cursor.close()
-    # Return a small HTML page with JavaScript to redirect and check the checkbox
-    return render_template('menu.html')
+    return redirect(url_for('login_page'))
 
 if __name__ == '__main__':
     app.run(debug=True)

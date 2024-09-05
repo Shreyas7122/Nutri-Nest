@@ -167,6 +167,26 @@
     transition: .5s;
 }
 
+.flash-container {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+  }
+  .flash-message {
+    padding: 10px;
+    border: 1px solid;
+    border-radius: 4px;
+    max-width: 400px; /* Optional: limit the width of the message */
+    width: 100%;
+  }
+  .flash-message.error {
+    border-color: red;
+    color: red;
+  }
+  .flash-message.success {
+    border-color: green;
+    color: green;
+  }
 .login-button{
     display: flex;
     margin-top: 25px;

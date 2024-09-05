@@ -115,13 +115,16 @@
         }
     });
     
-})(jQuery);// Function to toggle cart visibility
+})
+(jQuery);
+// Function to toggle cart visibility
+ // Toggle cart visibility
 function toggleCart() {
     const cart = document.getElementById('shoppingCart');
     cart.classList.toggle('active');
 }
 
-// Function to add items to the cart
+// Add items to the cart
 function addToCart(name, price) {
     const cartItems = document.getElementById('cartItems');
     
@@ -150,7 +153,7 @@ function addToCart(name, price) {
     saveCart();
 }
 
-// Function to update item quantity
+// Update item quantity
 function updateQuantity(button, amount) {
     const quantityElement = button.parentElement.querySelector('span');
     let currentQuantity = parseInt(quantityElement.textContent);
@@ -165,43 +168,48 @@ function updateQuantity(button, amount) {
     saveCart();
 }
 
-// Function to save cart state to local storage
+// Save cart state to local storage
 function saveCart() {
     const cartItems = document.querySelectorAll('.cart-item');
     const cartData = [];
-
+    
     cartItems.forEach(item => {
         const name = item.getAttribute('data-name');
-        const price = item.querySelector('p:nth-child(2)').textContent;
-        const quantity = item.querySelector('.quantity span').textContent;
+        const price = parseFloat(item.querySelector('p:nth-child(2)').textContent);
+        const quantity = parseInt(item.querySelector('.quantity span').textContent);
         cartData.push({ name, price, quantity });
     });
-
+    
+    console.log('Saving cart:', cartData); // Debugging
     localStorage.setItem('cart', JSON.stringify(cartData));
 }
 
-// Function to load cart state from local storage
+// Load cart state from local storage
 function loadCart() {
     const cartData = JSON.parse(localStorage.getItem('cart'));
-    if (cartData) {
+    if (cartData && Array.isArray(cartData)) {
         const cartItems = document.getElementById('cartItems');
         cartItems.innerHTML = ''; // Clear existing items
 
         cartData.forEach(item => {
-            const cartItem = document.createElement('div');
-            cartItem.classList.add('cart-item');
-            cartItem.setAttribute('data-name', item.name);
-            cartItem.innerHTML = `
-                <p>${item.name}</p>
-                <p>${item.price}</p>
-                <div class="quantity">
-                    <button onclick="updateQuantity(this, -1)">-</button>
-                    <span>${item.quantity}</span>
-                    <button onclick="updateQuantity(this, 1)">+</button>
-                </div>
-            `;
-            cartItems.appendChild(cartItem);
+            if (item.name && !isNaN(item.price) && !isNaN(item.quantity)) {
+                const cartItem = document.createElement('div');
+                cartItem.classList.add('cart-item');
+                cartItem.setAttribute('data-name', item.name);
+                cartItem.innerHTML = `
+                    <p>${item.name}</p>
+                    <p>${item.price}</p>
+                    <div class="quantity">
+                        <button onclick="updateQuantity(this, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="updateQuantity(this, 1)">+</button>
+                    </div>
+                `;
+                cartItems.appendChild(cartItem);
+            }
         });
+
+        console.log('Loaded cart:', cartData); // Debugging
     }
 }
 
@@ -209,10 +217,12 @@ function loadCart() {
 document.querySelectorAll('.add-to-cart').forEach(button => {
     button.addEventListener('click', function() {
         const name = this.getAttribute('data-name');
-        const price = this.getAttribute('data-price');
+        const price = parseFloat(this.getAttribute('data-price'));
+        console.log('Adding to cart:', name, price); // Debugging
         addToCart(name, price);
     });
 });
 
 // Load cart when the page loads
 window.onload = loadCart;
+
