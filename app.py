@@ -5,7 +5,6 @@ import os
 import MySQLdb.cursors
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
