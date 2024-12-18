@@ -89,8 +89,9 @@
     <div class="cart-items" id="cartItems">
     </div>
     <div class="cart-footer">
-        <button class="close-btn" onclick="toggleCart()">Close</button>
-        <button class="checkout-btn">Check Out</button>
+        <button class="close-btn" type="button" onclick="toggleCart()">Close</button>
+        <button class="checkout-btn" type="button" onclick="window.location.href='{{ url_for('checkout') }}'">Check Out</button>
+
     </div>
 </div>
 

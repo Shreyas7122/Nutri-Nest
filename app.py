@@ -50,6 +50,41 @@ def login():
 def menu():
     return render_template('menu.html')
 
+# Route to display the checkout page
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    if request.method == 'POST':
+        # Retrieve cart data from the POST request
+        cart_data = request.get_json()
+        # Store cart data in session (or pass directly)
+        if cart_data:
+            # Redirect to the checkout page
+            return jsonify({"redirect": url_for('checkout')})
+        else:
+            return jsonify({"error": "No cart data received"}), 400
+    else:
+        # For GET requests, render the checkout page
+        return render_template('checkout.html')
+
+def process_checkout():
+    # Retrieve form data
+    name = request.form.get('name')
+    email = request.form.get('email')
+    address = request.form.get('address')
+    city = request.form.get('city')
+    zip_code = request.form.get('zip')
+    card_number = request.form.get('cardNumber')
+    expiry_date = request.form.get('expiryDate')
+    cvv = request.form.get('cvv')
+
+    # Process the order
+    # Example: Save to database, send an email, etc.
+
+    return redirect(url_for('menu'))  # Redirect to a success page or menu
+
+@app.route('/redirect_to_checkout') 
+def redirect_to_checkout(): return redirect(url_for('checkout'))
+
 @app.route('/register', methods=['POST'])
 def register():
     email = request.form['email']

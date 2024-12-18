@@ -158,6 +158,40 @@
     opacity: 1;
 }
 
+/*selecct*/
+select{
+    align-content: center;
+    /*reset*/
+    appearance: none;
+    border: 1;
+    outline: 1;
+    font : inherit;
+    /*personalize*/
+    width:20rem;
+    padding:1rem 4rem 1rem 1rem;
+    background: var(--arrow-icon)no-repeat right 0.8em center/
+    1.4em,
+    linear-gradient(to left,var(--arrow-bg) 3em,var(--select-bg)
+    3em);
+    color:#ff9800;
+    border-radius:  0.25em;
+    box-shadow : 0 0 0 1em 0rgba(0,0,0,0,0.2);
+    cursor : pointer;
+    /*Remove IE arrow*/
+    &::-ms-expand{
+        display: none;
+    }
+    /*remove focus outline*/
+    &:focus{
+        outline: none;
+    }
+    /*option colors*/
+    option{
+        color: inherit;
+        background-color: var(--option-bg);
+    } 
+
+}
 
 /*** Button ***/
 .btn {

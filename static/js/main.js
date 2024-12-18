@@ -11,6 +11,12 @@
     };
     spinner();
     
+    /*
+  Pure CSS Select 2.0
+  - No wrapper version
+  - SVG icon
+  - Glass style
+*/
     
     // Initiate the wowjs
     new WOW().init();
@@ -67,6 +73,21 @@
         return false;
     });
 
+    
+    function checkout() {
+    const cartItems = getCartItems(); // Collect items from your cart
+    fetch('/checkout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cartItems),
+    }).then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        }
+    });
+}
 
     // Facts counter
     $('[data-toggle="counter-up"]').counterUp({
@@ -183,6 +204,64 @@ function saveCart() {
     console.log('Saving cart:', cartData); // Debugging
     localStorage.setItem('cart', JSON.stringify(cartData));
 }
+
+// Load cart state from local storage
+function loadCart() {
+    const cartData = JSON.parse(localStorage.getItem('cart'));
+    if (cartData && Array.isArray(cartData)) {
+        const cartItems = document.getElementById('cartItems');
+        cartItems.innerHTML = ''; // Clear existing items
+
+        cartData.forEach(item => {
+            if (item.name && !isNaN(item.price) && !isNaN(item.quantity)) {
+                const cartItem = document.createElement('div');
+                cartItem.classList.add('cart-item');
+                cartItem.setAttribute('data-name', item.name);
+                cartItem.innerHTML = `
+                    <p>${item.name}</p>
+                    <p>${item.price}</p>
+                    <div class="quantity">
+                        <button onclick="updateQuantity(this, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="updateQuantity(this, 1)">+</button>
+                    </div>
+                `;
+                cartItems.appendChild(cartItem);
+            }
+        });
+
+        console.log('Loaded cart:', cartData); // Debugging
+    }
+}
+
+// Pass cart data to checkout
+function proceedToCheckout() {
+    const cartData = JSON.parse(localStorage.getItem('cart')) || [];
+    if (cartData.length === 0) {
+        alert("Your cart is empty!");
+        return;
+    }
+
+    fetch('/checkout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cartData),
+    }).then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        }
+    }).catch(error => {
+        console.error('Error during checkout:', error);
+    });
+}
+
+// Attach event to checkout button
+document.querySelector('.checkout-btn').addEventListener('click', proceedToCheckout);
+
+// Load the cart on page load
+document.addEventListener('DOMContentLoaded', loadCart);
 
 // Load cart state from local storage
 function loadCart() {
