@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template, flash, jsonify
+from flask import Flask, request, redirect, url_for, render_template, flash
 from flask_mysqldb import MySQL
 from dotenv import load_dotenv
 import os
@@ -16,7 +16,6 @@ app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
 
 mysql = MySQL(app)
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -25,80 +24,72 @@ def index():
 def contact():
     return render_template('contact.html')
 
+@app.route('/login')
+def login_page():
+    return render_template('login.html')
+
 @app.route('/about')
 def about():
     return render_template('about.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def login_page():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        try:
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
-            account = cursor.fetchone()
-            cursor.close()
-            if account and check_password_hash(account['password'], password):
-                role = account['role']
-                if role == 'admin':
-                    return redirect(url_for('admin_dashboard'))
-                else:
-                    return redirect(url_for('menu'))
-            else:
-                flash('Invalid credentials', 'error')
-        except MySQLdb.Error as e:
-            flash(f"Database error: {e}", 'error')
+@app.route('/login', methods=['POST'])
+def login():
+    email = request.form['email']
+    password = request.form['password']
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+    account = cursor.fetchone()
+    cursor.close()
+    if account and check_password_hash(account['password'], password):
+        return redirect(url_for('menu'))
+    else:
+        flash('Invalid credentials', 'error')
         return redirect(url_for('login_page'))
-    return render_template('login.html')
 
 @app.route('/menu')
 def menu():
     return render_template('menu.html')
 
-@app.route('/admin')
-def admin_dashboard():
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM checkouts')
-    checkout_details = cursor.fetchall()
-    cursor.close()
-    return render_template('admin_dashboard.html', checkout_details=checkout_details)
-
+# Route to display the checkout page
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
     if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        address = request.form.get('address')
-        city = request.form.get('city')
-        zip_code = request.form.get('zip')
-        delivery_preference = request.form.get('delivery_preference')
+        # Retrieve cart data from the POST request
+        cart_data = request.get_json()
+        # Store cart data in session (or pass directly)
+        if cart_data:
+            # Redirect to the checkout page
+            return jsonify({"redirect": url_for('checkout')})
+        else:
+            return jsonify({"error": "No cart data received"}), 400
+    else:
+        # For GET requests, render the checkout page
+        return render_template('checkout.html')
 
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'INSERT INTO checkouts (name, email, address, city, zip_code, delivery_preference) VALUES (%s, %s, %s, %s, %s, %s)',
-            (name, email, address, city, zip_code, delivery_preference)
-        )
-        mysql.connection.commit()
-        cursor.close()
-        flash('Order placed successfully!', 'success')
-        return redirect(url_for('checkout'))
+def process_checkout():
+    # Retrieve form data
+    name = request.form.get('name')
+    email = request.form.get('email')
+    address = request.form.get('address')
+    city = request.form.get('city')
+    zip_code = request.form.get('zip')
+    card_number = request.form.get('cardNumber')
+    expiry_date = request.form.get('expiryDate')
+    cvv = request.form.get('cvv')
 
-    # Retrieve all checkout data to display
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM checkouts')
-    checkout_details = cursor.fetchall()
-    cursor.close()
-    return render_template('checkout.html', checkout_details=checkout_details)
+    # Process the order
+    # Example: Save to database, send an email, etc.
 
+    return redirect(url_for('menu'))  # Redirect to a success page or menu
 
+@app.route('/redirect_to_checkout') 
+def redirect_to_checkout(): return redirect(url_for('checkout'))
 
 @app.route('/register', methods=['POST'])
 def register():
     email = request.form['email']
     password = request.form['password']
     confirm_password = request.form['confirm_password']
-    role = request.form['role']
     if password != confirm_password:
         flash('Passwords do not match', 'error')
         return redirect(url_for('login_page'))
@@ -109,7 +100,7 @@ def register():
     if account:
         flash('Account already exists', 'error')
     else:
-        cursor.execute('INSERT INTO users (email, password, role) VALUES (%s, %s, %s)', (email, hashed_password, role))
+        cursor.execute('INSERT INTO users (email, password) VALUES (%s, %s)', (email, hashed_password))
         mysql.connection.commit()
         flash('Account created successfully', 'success')
     cursor.close()
